@@ -102,6 +102,7 @@
           // remove scope listener
           unbindInitialValue();
           // change input
+
           handleInputChange(newval, true);
         }
       });
@@ -141,7 +142,7 @@
         if (newval) {
           if (typeof newval === 'object') {
             scope.searchStr = extractTitle(newval);
-            callOrAssign({originalObject: newval});
+            callOrAssign(processResult(newval, scope.searchStr));
           } else if (typeof newval === 'string' && newval.length > 0) {
             scope.searchStr = newval;
           } else {
@@ -569,6 +570,37 @@
         }
       }
 
+      function processResult(result, search) {
+        var formattedText, formattedDesc, description, image;
+        if (scope.titleField && scope.titleField !== '') {
+          formattedText = extractTitle(result);
+        }
+
+        description = '';
+        if (scope.descriptionField) {
+          description = extractValue(result, scope.descriptionField);
+        }
+
+        image = '';
+        if (scope.imageField) {
+          image = extractValue(result, scope.imageField);
+        }
+
+        if (scope.matchClass) {
+          formattedText = findMatchString(formattedText, search);
+          formattedDesc = findMatchString(description, search);
+        }
+
+        return {
+          title: formattedText,
+          description: formattedDesc,
+          image: image,
+          originalObject: result
+        };
+
+      }
+
+
       function processResults(responseData, str) {
         var i, description, image, text, formattedText, formattedDesc;
 
@@ -576,31 +608,7 @@
           scope.results = [];
 
           for (i = 0; i < responseData.length; i++) {
-            if (scope.titleField && scope.titleField !== '') {
-              text = formattedText = extractTitle(responseData[i]);
-            }
-
-            description = '';
-            if (scope.descriptionField) {
-              description = formattedDesc = extractValue(responseData[i], scope.descriptionField);
-            }
-
-            image = '';
-            if (scope.imageField) {
-              image = extractValue(responseData[i], scope.imageField);
-            }
-
-            if (scope.matchClass) {
-              formattedText = findMatchString(text, str);
-              formattedDesc = findMatchString(description, str);
-            }
-
-            scope.results[scope.results.length] = {
-              title: formattedText,
-              description: formattedDesc,
-              image: image,
-              originalObject: responseData[i]
-            };
+            scope.results[scope.results.length] = processResult(responseData[i], str);
           }
 
         } else {
