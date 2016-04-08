@@ -46,7 +46,8 @@
     // Set the default template for this directive
     $templateCache.put(TEMPLATE_URL,
         '<div class="angucomplete-holder" ng-class="{\'angucomplete-dropdown-visible\': showDropdown}">' +
-        '  <input id="{{id}}_value" name="{{inputName}}" tabindex="{{fieldTabindex}}" ng-class="{\'angucomplete-input-not-empty\': notEmpty}" ng-model="searchStr" ng-disabled="disableInput" type="{{inputType}}" placeholder="{{placeholder}}" maxlength="{{maxlength}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults($event)" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
+        '  <img ng-if="selectedValue && selectedValue.image" ng-src="{{selectedValue.image}}" class="angucomplete-selected-image"/>' +
+        '  <input id="{{id}}_value" name="{{inputName}}" tabindex="{{fieldTabindex}}" ng-class="{\'angucomplete-input-not-empty\': notEmpty, \'angucomplete-input-image-not-empty\': selectedValue && selectedValue.image}" ng-model="searchStr" ng-disabled="disableInput" type="{{inputType}}" placeholder="{{placeholder}}" maxlength="{{maxlength}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults($event)" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
         '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-show="showDropdown">' +
         '    <div class="angucomplete-searching" ng-show="searching" ng-bind="textSearching"></div>' +
         '    <div class="angucomplete-searching" ng-show="!searching && (!results || results.length == 0)" ng-bind="textNoResults"></div>' +
@@ -135,6 +136,8 @@
       });
 
       function handleInputChange(newval, initial) {
+        scope.selectedValue = null;
+
         if (newval) {
           if (typeof newval === 'object') {
             scope.searchStr = extractTitle(newval);
@@ -166,10 +169,11 @@
       function callOrAssign(value) {
         if (typeof scope.selectedObject === 'function') {
           scope.selectedObject(value);
-        }
-        else {
+        } else {
           scope.selectedObject = value;
         }
+
+        scope.selectedValue = value;
 
         if (value) {
           handleRequired(true);
@@ -446,16 +450,11 @@
         if (status === 0 || status === -1) { return; }
 
         // normalize return obejct from promise
-        if (!status && !headers && !config) {
+        if (!status && !headers && !config && errorRes) {
           status = errorRes.status;
         }
         if (scope.remoteUrlErrorCallback) {
           scope.remoteUrlErrorCallback(errorRes, status, headers, config);
-        }
-        else {
-          if (console && console.error) {
-            console.error('http error');
-          }
         }
       }
 
@@ -646,6 +645,7 @@
         if (shouldShowDropdownOnFocus()) {
           scope.currentIndex = scope.focusFirst ? 0 : scope.currentIndex;
           scope.showDropdown = true;
+          scope.searching = true;
           showAll(scope.searchStr);
         }
       };
