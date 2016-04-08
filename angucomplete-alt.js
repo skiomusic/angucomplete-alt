@@ -55,10 +55,12 @@
         '        <img ng-if="result.image && result.image != \'\'" ng-src="{{result.image}}" class="angucomplete-image"/>' +
         '        <div ng-if="!result.image && result.image != \'\'" class="angucomplete-image-default"></div>' +
         '      </div>' +
+        '     <div class="angucomplete-content"> ' +
         '      <div class="angucomplete-title" ng-if="matchClass" ng-bind-html="result.title"></div>' +
         '      <div class="angucomplete-title" ng-if="!matchClass">{{ result.title }}</div>' +
         '      <div ng-if="matchClass && result.description && result.description != \'\'" class="angucomplete-description" ng-bind-html="result.description"></div>' +
         '      <div ng-if="!matchClass && result.description && result.description != \'\'" class="angucomplete-description">{{result.description}}</div>' +
+        '     </div>' +
         '    </div>' +
         '  </div>' +
         '</div>'
@@ -617,26 +619,34 @@
         }
       }
 
-      function showAll() {
+      function showAll(search) {
+        search = search || '';
+
         if (scope.localData) {
-          processResults(scope.localData, '');
+          processResults(scope.localData, search);
         }
         else if (scope.remoteApiHandler) {
-          getRemoteResultsWithCustomHandler('');
+          getRemoteResultsWithCustomHandler(search);
         }
         else {
-          getRemoteResults('');
+          getRemoteResults(search);
         }
       }
+
+      function shouldShowDropdownOnFocus() {
+        return (minlength === 0 && (!scope.searchStr || scope.searchStr.length === 0)) ||
+               (minlength >= 0 && scope.searchStr && scope.searchStr.length);
+      }
+
 
       scope.onFocusHandler = function() {
         if (scope.focusIn) {
           scope.focusIn();
         }
-        if (minlength === 0 && (!scope.searchStr || scope.searchStr.length === 0)) {
+        if (shouldShowDropdownOnFocus()) {
           scope.currentIndex = scope.focusFirst ? 0 : scope.currentIndex;
           scope.showDropdown = true;
-          showAll();
+          showAll(scope.searchStr);
         }
       };
 
